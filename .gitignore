@@ -1,0 +1,6 @@
+model-weights/*
+venv/*
+outputs/*
+*.mov
+*.mp4
+*.avi
