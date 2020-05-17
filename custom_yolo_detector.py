@@ -29,7 +29,8 @@ import cv2
 import numpy as np
 from facenet import facenet
 import tensorflow as tf
-
+from imutils import face_utils
+import dlib
 
 from utils import *
 from ident_utils import *
@@ -38,7 +39,7 @@ from ident_utils import *
 args = {}
 args["model_cfg"] = './cfg/yolov3-face.cfg'
 args["model_weights"] = './model-weights/yolov3-wider_16000.weights'
-args["src"] = 0
+args["src"] = "./vid.mp4"
 args["output_dir"] = 'outputs/'
 args["known_persons"] = json.load(open('./data/persons.json'))
 
@@ -70,6 +71,8 @@ images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
 embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
 phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
 embedding_size = embeddings.get_shape()[1]
+
+face_aligner = face_utils.FaceAligner(dlib.shape_predictor("./model-weights/shape_predictor_5_face_landmarks.dat"), desiredFaceWidth=160, desiredFaceHeight=160, desiredLeftEye=(0.25,0.2))
 
 
 def _main():
@@ -115,7 +118,7 @@ def _main():
 
         #search for matching faces and apply names to frame
         if len(faces) > 0:
-            search_identities_facenet(frame, faces, args["known_persons"], sess, embeddings, images_placeholder, phase_train_placeholder)        
+            search_identities_facenet(frame, faces, args["known_persons"], sess, embeddings, images_placeholder, phase_train_placeholder, face_aligner)        
 
         print('[i] ==> # detected faces: {}'.format(len(faces)))
         print('#' * 60)

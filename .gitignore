@@ -1,6 +1,8 @@
 model-weights/*
 venv/*
 outputs/*
+.DS_Store
+.idea/*
 *.mov
 *.mp4
 *.avi

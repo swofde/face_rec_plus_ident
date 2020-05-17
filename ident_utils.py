@@ -1,10 +1,13 @@
-import numpy as np
 import cv2
+import dlib
+import numpy as np
 import face_recognition
+import matplotlib.pyplot as plt
 from utils import refined_box
+from imutils import face_utils
 
-CONF_THRESHOLD = 0.6
-CONF_THRESHOLD_FACENET = 1.0
+CONF_THRESHOLD_IDENT = 0.6
+CONF_THRESHOLD_FACENET = 0.7
 
 COLOR_BLUE = (255, 0, 0)
 COLOR_GREEN = (0, 255, 0)
@@ -40,7 +43,7 @@ def search_identities(frame, boxes, persons_info):
 		if e is not None and len(e) > 0:
 			#find argmin and minimum distance to current embedding from known embeddings
 			amin, vmin = _findMin(e, persons_info)
-			if vmin <= CONF_THRESHOLD:
+			if vmin <= CONF_THRESHOLD_IDENT:
 				print("found person ", persons_info[amin]["name"]) 
 				names.append(persons_info[amin]["name"])
 			else:
@@ -57,20 +60,18 @@ def search_identities(frame, boxes, persons_info):
 		(left, top, right, bottom) = refined_box(left, top, width, height)
 		draw_names(frame, names[i], left, top, right, bottom)
 
-
-def _findMin(target, persons_info):
-	ans = [np.linalg.norm(_ - target) for _ in np.array([_["embeddings"] for _ in persons_info])]
-	amin = np.argmin(ans)
-	return amin, ans[amin] 
-
-def search_identities_facenet(frame, boxes, persons_info, facenet_session, embeddings, images_placeholder, phase_train_placeholder):
+def search_identities_facenet(frame, boxes, persons_info, facenet_session, embeddings, images_placeholder, phase_train_placeholder, face_aligner):
 	crops = []
 	names = []
 	cropped_embeddings = []
 
-	#crop faces from frame using predicted bboxes
+	#align and crop faces from frame using predicted bboxes
 	for (left, top, width, height) in boxes:
-		crops.append(cv2.resize(frame[top:top+height, left:left+width,::-1], (160,160), interpolation=cv2.INTER_LINEAR))
+		rect = dlib.rectangle(left,top,left+width,top+height)
+		img = frame[:,:,::-1]
+		gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+		crops.append(face_aligner.align(img,gray,rect))
+
 	#for each crop compute embedding vectors
 	crops = np.array(crops).astype(np.uint8)
 	feed_dict = {images_placeholder: crops, phase_train_placeholder: False}
@@ -97,3 +98,9 @@ def search_identities_facenet(frame, boxes, persons_info, facenet_session, embed
 		height = box[3]
 		(left, top, right, bottom) = refined_box(left, top, width, height)
 		draw_names(frame, names[i], left, top, right, bottom)
+
+def _findMin(target, persons_info):
+	ans = [np.linalg.norm(_ - target) for _ in np.array([_["embeddings"] for _ in persons_info])]
+	amin = np.argmin(ans)
+	print(ans)
+	return amin, ans[amin] 

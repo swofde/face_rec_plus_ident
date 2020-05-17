@@ -59,8 +59,7 @@ def draw_predict(frame, conf, left, top, right, bottom):
     label_size, base_line = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
 
     top = max(top, label_size[1])
-    cv2.putText(frame, text, (left, top - 4), cv2.FONT_HERSHEY_SIMPLEX, 0.4,
-                COLOR_WHITE, 1)
+    cv2.putText(frame, text, (left, top - 4), cv2.FONT_HERSHEY_SIMPLEX, 0.4, COLOR_WHITE, 1)
 
 
 def post_process(frame, outs, conf_threshold, nms_threshold):
