@@ -39,7 +39,7 @@ from ident_utils import *
 args = {}
 args["model_cfg"] = './cfg/yolov3-face.cfg'
 args["model_weights"] = './model-weights/yolov3-wider_16000.weights'
-args["src"] = "./vid.mp4"
+args["src"] = 0
 args["output_dir"] = 'outputs/'
 args["known_persons"] = json.load(open('./data/persons.json'))
 

@@ -21,7 +21,7 @@ import cv2
 # Parameters
 # -------------------------------------------------------------------
 
-CONF_THRESHOLD = 0.5
+CONF_THRESHOLD = 0.9
 NMS_THRESHOLD = 0.4
 IMG_WIDTH = 416
 IMG_HEIGHT = 416
@@ -29,9 +29,9 @@ IMG_HEIGHT = 416
 # Default colors
 COLOR_BLUE = (255, 0, 0)
 COLOR_GREEN = (0, 255, 0)
-COLOR_RED = (0, 0, 255)
+COLOR_RED = (255, 0, 0)
 COLOR_WHITE = (255, 255, 255)
-COLOR_YELLOW = (0, 255, 255)
+COLOR_YELLOW = (255, 255, 0)
 
 
 # -------------------------------------------------------------------
@@ -60,6 +60,22 @@ def draw_predict(frame, conf, left, top, right, bottom):
 
     top = max(top, label_size[1])
     cv2.putText(frame, text, (left, top - 4), cv2.FONT_HERSHEY_SIMPLEX, 0.4, COLOR_WHITE, 1)
+
+def mtcnn_post_process(frame, outs, conf_threshold, nms_threshold=NMS_THRESHOLD):
+    final_boxes = []
+    confidences = [_['confidence'] for _ in outs]
+
+    indices = cv2.dnn.NMSBoxes([_['box'] for _ in outs], confidences, conf_threshold,
+                               nms_threshold)
+    for i in indices:
+        i = i[0]
+        left, top, width, height = outs[i]['box']
+        right = left + width
+        bottom = top + height
+        final_boxes.append([left, top, right, bottom])
+        draw_predict(frame, confidences[i], int(left), int(top), int(right), int(bottom))
+
+    return final_boxes
 
 
 def post_process(frame, outs, conf_threshold, nms_threshold):
